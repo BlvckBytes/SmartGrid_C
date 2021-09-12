@@ -106,6 +106,80 @@ void proc_lvl4(void)
 {
     int max_power = stdp_num(); // max/minute
     long max_bill = stdp_num(); //max bill
+
+    // Parse minutes
+    int num_minutes = stdp_num();
+    CCC_Minute minutes[num_minutes];
+    for (int i = 0; i < num_minutes; i++)
+        minutes[i] = (CCC_Minute) { stdp_num(), max_power };
+
+    // Parse tasks
+    int num_tasks = stdp_num();
+    CCC_Task tasks[num_tasks];
+    for (int i = 0; i < num_tasks; i++)
+        tasks[i] = (CCC_Task) { stdp_num(), stdp_num(), stdp_num(), stdp_num() };
+    printf("%d\n", num_tasks);
+
+    // Sort to lowest span first
+    qsort(tasks, num_tasks, sizeof(CCC_Task), compare_task_span);
+
+    for (int i = 0; i < num_tasks; i++)
+    {
+        CCC_Task *task = &tasks[i];
+        printf("%d ", task->task_id);
+
+        while (task->power > 0)
+        {
+            if (max_bill < 0) {
+                fprintf(stderr, "ERROR! Price higher than bill allows!\n");
+                break;
+            }
+
+            int lowest_id = -1;
+            for (int j = task->start_interval; j <= task->end_interval; j++)
+            {
+                if (minutes[j].power_left <= 0) continue;
+
+                if (lowest_id == -1 || minutes[j].price < minutes[lowest_id].price)
+                    lowest_id = j;
+            }
+
+            if (lowest_id < 0) {
+                fprintf(stderr, "ERROR! Could not find a remaining slot for task %d!\n", task->task_id);
+                break;
+            }
+
+            CCC_Minute *target = &minutes[lowest_id];
+                
+            // This minute has enough resources left
+            if (task->power <= target->power_left)
+            {
+                target->power_left -= task->power;
+                printf("%d %d", lowest_id, task->power);
+                max_bill -= task->power * target->price;
+                task->power = 0;
+            }
+
+            // Use as much as available and continue
+            else
+            {
+                task->power -= target->power_left;
+                printf("%d %d ", lowest_id, target->power_left);
+                max_bill -= target->power_left * target->price;
+                target->power_left = 0;
+            }
+        }
+
+        printf("\n");
+    }
+}
+
+// Find cheapest minutes to draw power from in interval, where each minute has limited resources
+// Minutes have max. slots now
+void proc_lvl5(void)
+{
+    int max_power = stdp_num(); // max/minute
+    long max_bill = stdp_num(); //max bill
     int max_concurrent = stdp_num(); // max tasks at a time
 
     // Parse minutes
@@ -196,6 +270,10 @@ int main(int argc, char *argv[])
 
     case 4:
         proc_lvl4();
+        break;
+
+    case 5:
+        proc_lvl5();
         break;
     }
 
