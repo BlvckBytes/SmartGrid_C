@@ -1,6 +1,6 @@
 #include "include/stdparse.h"
 
-int stdp_int()
+long stdp_num()
 {
     static char digit_buf[128];
     int digit_buf_index = 0;
@@ -23,5 +23,5 @@ int stdp_int()
     );
 
     digit_buf[digit_buf_index] = '\0';
-    return atoi(digit_buf);
+    return atol(digit_buf);
 }

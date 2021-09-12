@@ -4,6 +4,6 @@
 #ifndef STDPARSE_H_
 #define STDPARSE_H_
 
-int stdp_int();
+long stdp_num();
 
 #endif
