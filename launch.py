@@ -13,8 +13,6 @@ def run(file, cmd):
     shell = True
   )
 
-  proc.wait()
-
 targ_lvl = 1
 try:
   targ_lvl = int(sys.argv[1]) if len(sys.argv) > 1 else 1
@@ -31,7 +29,7 @@ inp_files.sort()
 for inp_file in inp_files:
   abs_path = join(base_path, inp_file)
   out_path = os.path.splitext(abs_path)[0] + '.out'
-  cmd = f'cat {abs_path} | ./a.out > {out_path}'
+  cmd = f'cat {abs_path} | ./a.out {targ_lvl} > {out_path}'
 
   start = time.time()
   run(abs_path, cmd)

@@ -41,31 +41,34 @@ void proc_lvl2(void)
     {
         // Load task
         CCC_Task task = { stdp_num(), stdp_num(), 0, 0 };
-        int curr_price = -1;
-        int curr_begin = -1;
+
+        int best_begin = 0;
+
+        // Task price accumulator
+        int acc = 0;
+        for (int k = 0; k < task.power; k++)
+            acc += slot_prices[k];
 
         // Top offset loop
-        for (int j = 0; j <= num_slots - task.power; j++)
+        for (int j = 1; j <= num_slots - task.power; j++)
         {
-
-            // Task length accumulator
-            int acc = 0;
-            for (int k = j; k < j + task.power; k++)
-                acc += slot_prices[k];
+            // Shift acc by 1 slot
+            int new_acc = acc - slot_prices[j - 1] + slot_prices[j + task.power - 1];
 
             // Save next best result
-            if (curr_price == -1 || acc < curr_price)
-            {
-                curr_price = acc;
-                curr_begin = j;
-            }
+            if (new_acc < acc)
+                best_begin = j;
+
+            // Update acc
+            acc = new_acc;
         }
 
         // Print task's result
-        printf("%d %d\n", task.task_id, curr_begin);
+        printf("%d %d\n", task.task_id, best_begin);
     }
 }
 
+// Find cheapest minute in given interval
 void proc_lvl3(void)
 {
     // Parse minutes and their price
@@ -98,6 +101,7 @@ int compare_task_span (const void *a, const void *b) {
     (((CCC_Task *)b)->end_interval - ((CCC_Task *)b)->start_interval);
 }
 
+// Find cheapest minutes to draw power from in interval, where each minute has limited resources
 void proc_lvl4(void)
 {
     int max_power = stdp_num(); // max/minute
@@ -171,8 +175,29 @@ void proc_lvl4(void)
     }
 }
 
-int main(void)
+int main(int argc, char *argv[])
 {
-    proc_lvl4();
+    if (argc < 2) return 1;
+    int targ_level = atoi(argv[1]);
+
+    switch (targ_level)
+    {
+    case 1:
+        proc_lvl1();
+        break;
+    
+    case 2:
+        proc_lvl2();
+        break;
+    
+    case 3:
+        proc_lvl3();
+        break;
+
+    case 4:
+        proc_lvl4();
+        break;
+    }
+
     return 0;
 }
