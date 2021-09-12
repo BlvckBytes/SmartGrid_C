@@ -114,7 +114,7 @@ void proc_lvl4(void)
     int num_minutes = stdp_num();
     CCC_Minute minutes[num_minutes];
     for (int i = 0; i < num_minutes; i++)
-        minutes[i] = (CCC_Minute) { stdp_num(), max_power, -1 };
+        minutes[i] = (CCC_Minute) { stdp_num(), 0, 0 };
 
     // Parse tasks
     int num_tasks = stdp_num();
@@ -141,7 +141,7 @@ void proc_lvl4(void)
             int lowest_id = -1;
             for (int j = task->start_interval; j <= task->end_interval; j++)
             {
-                if (minutes[j].power_left <= 0) continue;
+                if (minutes[j].used_power == max_power) continue;
 
                 if (lowest_id == -1 || minutes[j].price < minutes[lowest_id].price)
                     lowest_id = j;
@@ -155,9 +155,9 @@ void proc_lvl4(void)
             CCC_Minute *target = &minutes[lowest_id];
                 
             // This minute has enough resources left
-            if (task->power <= target->power_left)
+            if (task->power <= max_power - target->used_power)
             {
-                target->power_left -= task->power;
+                target->used_power += task->power;
                 printf("%d %d", lowest_id, task->power);
                 max_bill -= task->power * target->price;
                 task->power = 0;
@@ -166,10 +166,11 @@ void proc_lvl4(void)
             // Use as much as available and continue
             else
             {
-                task->power -= target->power_left;
-                printf("%d %d ", lowest_id, target->power_left);
-                max_bill -= target->power_left * target->price;
-                target->power_left = 0;
+                int remaining = max_power - target->used_power;
+                task->power -= remaining;
+                printf("%d %d ", lowest_id, remaining);
+                max_bill -= max_power - target->used_power * target->price;
+                target->used_power = max_power;
             }
         }
 
@@ -189,7 +190,7 @@ void proc_lvl5(void)
     int num_minutes = stdp_num();
     CCC_Minute minutes[num_minutes];
     for (int i = 0; i < num_minutes; i++)
-        minutes[i] = (CCC_Minute) { stdp_num(), max_power, max_concurrent };
+        minutes[i] = (CCC_Minute) { stdp_num(), 0, 0 };
 
     // Parse tasks
     int num_tasks = stdp_num();
@@ -217,10 +218,10 @@ void proc_lvl5(void)
             int used_power = 0;
             for (int j = task->start_interval; j <= task->end_interval; j++)
             {
-                if (minutes[j].power_left <= 0 || minutes[j].slots_left <= 0) continue;
+                if (minutes[j].used_power == max_power || minutes[j].used_slots == max_concurrent) continue;
                 CCC_Minute curr_min = minutes[j];
 
-                int curr_used_power = MIN(task->power, curr_min.power_left);
+                int curr_used_power = MIN(task->power, max_power - curr_min.used_power);
                 if (lowest_id == -1 || curr_min.price < minutes[lowest_id].price) {
                     lowest_id = j;
                     used_power = curr_used_power;
@@ -233,8 +234,8 @@ void proc_lvl5(void)
             }
 
             CCC_Minute *target = &minutes[lowest_id];
-            target->slots_left--;
-            target->power_left -= used_power;
+            target->used_slots++;
+            target->used_power += used_power;
             task->power -= used_power;
             max_bill -= used_power * target->price;
             printf("%d %d ", lowest_id, used_power);
@@ -246,8 +247,7 @@ void proc_lvl5(void)
 
 double calc_min_price(CCC_Minute *min, double max_power)
 {
-    double power_consumed = max_power - min->power_left;
-    return min->price * (1.0f + power_consumed / max_power);
+    return min->price * (1.0f + ((double)min->used_power) / max_power);
 }
 
 // Find cheapest minutes to draw power from in interval, where each minute has limited resources
@@ -263,7 +263,7 @@ void proc_lvl6(void)
     int num_minutes = stdp_num();
     CCC_Minute minutes[num_minutes];
     for (int i = 0; i < num_minutes; i++)
-        minutes[i] = (CCC_Minute) { stdp_num(), max_power, max_concurrent };
+        minutes[i] = (CCC_Minute) { stdp_num(), 0, 0 };
 
     // Parse tasks
     int num_tasks = stdp_num();
@@ -293,15 +293,9 @@ void proc_lvl6(void)
             for (int j = task->start_interval; j <= task->end_interval; j++)
             {
                 CCC_Minute curr_min = minutes[j];
-                if (curr_min.power_left == 0 || curr_min.slots_left == 0) continue;
+                if (curr_min.used_power == max_power || curr_min.used_slots == max_concurrent) continue;
                 
-                // Just a warning, :)
-                if (curr_min.power_left < 0 || curr_min.slots_left < 0) {
-                    fprintf(stderr, "ERROR! Minute stats have gone below 0! (%d, %d)\n", curr_min.power_left, curr_min.slots_left);
-                    continue;
-                }
-
-                int curr_used_power = MIN(task->power, curr_min.power_left);
+                int curr_used_power = MIN(task->power, max_power - curr_min.used_power);
                 int curr_price = round(((double)curr_used_power) * calc_min_price(&minutes[j], max_power));
 
                 if (lowest_id == -1 || curr_price < lowest_price) {
@@ -317,14 +311,103 @@ void proc_lvl6(void)
             }
 
             CCC_Minute *target = &minutes[lowest_id];
-            target->slots_left--;
-            target->power_left -= used_power;
+            target->used_slots++;
+            target->used_power += used_power;
             task->power -= used_power;
             max_bill -= lowest_price;
             printf("%d %d ", lowest_id, used_power);
         }
 
         printf("\n");
+    }
+}
+
+// Find cheapest minutes to draw power from in interval, where each minute has limited resources
+// Minutes have max. slots now
+// Price per minute depends on active users of that minute
+// Now, also manage households
+void proc_lvl7(void)
+{
+    int max_power = stdp_num(); // max/minute
+    long max_bill = stdp_num(); //max bill
+    int max_concurrent = stdp_num(); // max tasks at a time
+
+    // Parse minutes
+    int num_minutes = stdp_num();
+    CCC_Minute minutes[num_minutes];
+    for (int i = 0; i < num_minutes; i++)
+        minutes[i] = (CCC_Minute) { stdp_num(), 0, 0 };
+
+    int num_households = stdp_num();
+    printf("%d\n", num_households);
+    
+    for (int i = 0; i < num_households; i++)
+    {
+        int num_tasks = stdp_num();
+        CCC_Task household_tasks[num_tasks];
+        for (int j = 0; j < num_tasks; j++)
+            household_tasks[j] = (CCC_Task) { stdp_num(), stdp_num(), stdp_num(), stdp_num() };
+        
+        int power_left_minute[num_minutes];
+        int slots_left_minute[num_minutes];
+        for (int j = 0; j < num_minutes; j++) {
+            power_left_minute[j] = max_power;
+            slots_left_minute[j] = max_concurrent;
+        }
+
+        printf("%d\n", i + 1);
+        printf("%d\n", num_tasks);
+
+        // Sort to lowest span first
+        qsort(household_tasks, num_tasks, sizeof(CCC_Task), compare_task_span);
+
+        for (int i = 0; i < num_tasks; i++)
+        {
+            CCC_Task *task = &household_tasks[i];
+            printf("%d ", task->task_id);
+
+            while (task->power > 0)
+            {
+                if (max_bill < 0) {
+                    fprintf(stderr, "ERROR! Price higher than bill allows!\n");
+                    break;
+                }
+
+                int lowest_id = -1;
+                int lowest_price = 0;
+                int used_power = 0;
+                for (int j = task->start_interval; j <= task->end_interval; j++)
+                {
+                    CCC_Minute curr_min = minutes[j];
+                    if (power_left_minute[j] == 0 || slots_left_minute[j] == 0) continue;
+
+                    int curr_used_power = MIN(task->power, power_left_minute[j]);
+                    int curr_price = round(((double)curr_used_power) * calc_min_price(&minutes[j], max_power));
+
+                    if (lowest_id == -1 || curr_price < lowest_price) {
+                        lowest_id = j;
+                        lowest_price = curr_price;
+                        used_power = curr_used_power;
+                    }
+                }
+
+                if (lowest_id < 0) {
+                    fprintf(stderr, "ERROR! Could not find a remaining slot for task %d!\n", task->task_id);
+                    break;
+                }
+
+                CCC_Minute *target = &minutes[lowest_id];
+                slots_left_minute[lowest_id]--;
+                power_left_minute[lowest_id] -= used_power;
+                task->power -= used_power;
+                target->used_slots++;
+                target->used_power += used_power;
+                max_bill -= lowest_price;
+                printf("%d %d ", lowest_id, used_power);
+            }
+
+            printf("\n");
+        }
     }
 }
 
@@ -357,6 +440,10 @@ int main(int argc, char *argv[])
 
     case 6:
         proc_lvl6();
+        break;
+
+    case 7:
+        proc_lvl7();
         break;
     }
 
