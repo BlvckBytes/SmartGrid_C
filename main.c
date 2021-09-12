@@ -3,9 +3,10 @@
 
 #include "include/stdparse.h"
 #include "include/ccc_task.h"
+#include "include/ccc_minute.h"
 
 // Find cheapest slot id
-void proc_lvl1()
+void proc_lvl1(void)
 {
     int num_tasks = stdp_int();
     int smallest_slot_cost = -1;
@@ -23,7 +24,7 @@ void proc_lvl1()
 }
 
 // Find cheapest start task id to put tasks with specified length at
-void proc_lvl2()
+void proc_lvl2(void)
 {
     // Load slots
     int num_slots = stdp_int();
@@ -39,17 +40,17 @@ void proc_lvl2()
     for (int i = 0; i < num_tasks; i++)
     {
         // Load task
-        CCC_Task task = { stdp_int(), stdp_int() };
+        CCC_Task task = { stdp_int(), stdp_int(), 0, 0 };
         int curr_price = -1;
         int curr_begin = -1;
 
         // Top offset loop
-        for (int j = 0; j <= num_slots - task.dur; j++)
+        for (int j = 0; j <= num_slots - task.power; j++)
         {
 
             // Task length accumulator
             int acc = 0;
-            for (int k = j; k < j + task.dur; k++)
+            for (int k = j; k < j + task.power; k++)
                 acc += slot_prices[k];
 
             // Save next best result
@@ -62,6 +63,22 @@ void proc_lvl2()
 
         // Print task's result
         printf("%d %d\n", task.task_id, curr_begin);
+    }
+}
+
+void proc_lvl3(void)
+{
+    // Parse minutes and their price
+    int num_minutes = stdp_int();
+    CCC_Minute minutes[num_minutes];
+    for (int i = 0; i < num_minutes; i++)
+        minutes[i] = (CCC_Minute) { stdp_int() };
+
+    int num_tasks = stdp_int();
+    for (int i = 0; i < num_tasks; i++) {
+        CCC_Task task = { stdp_int(), stdp_int(), stdp_int(), stdp_int() };
+
+        // TODO
     }
 }
 

@@ -4,7 +4,9 @@
 typedef struct CCC_Task
 {
     int task_id;
-    int dur;
+    int power;
+    int start_interval;
+    int end_interval;
 } CCC_Task;
 
 #endif
