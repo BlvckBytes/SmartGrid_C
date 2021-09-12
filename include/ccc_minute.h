@@ -5,6 +5,7 @@ typedef struct CCC_Minute
 {
   int price;
   int power_left;
+  int slots_left;
 } CCC_Minute;
 
 #endif

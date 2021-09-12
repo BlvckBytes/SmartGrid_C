@@ -111,7 +111,7 @@ void proc_lvl4(void)
     int num_minutes = stdp_num();
     CCC_Minute minutes[num_minutes];
     for (int i = 0; i < num_minutes; i++)
-        minutes[i] = (CCC_Minute) { stdp_num(), max_power };
+        minutes[i] = (CCC_Minute) { stdp_num(), max_power, -1 };
 
     // Parse tasks
     int num_tasks = stdp_num();
@@ -186,7 +186,7 @@ void proc_lvl5(void)
     int num_minutes = stdp_num();
     CCC_Minute minutes[num_minutes];
     for (int i = 0; i < num_minutes; i++)
-        minutes[i] = (CCC_Minute) { stdp_num(), max_power };
+        minutes[i] = (CCC_Minute) { stdp_num(), max_power, max_concurrent };
 
     // Parse tasks
     int num_tasks = stdp_num();
@@ -213,8 +213,7 @@ void proc_lvl5(void)
             int lowest_id = -1;
             for (int j = task->start_interval; j <= task->end_interval; j++)
             {
-                if (minutes[j].power_left <= 0) continue;
-
+                if (minutes[j].power_left <= 0 || minutes[j].slots_left <= 0) continue;
                 if (lowest_id == -1 || minutes[j].price < minutes[lowest_id].price)
                     lowest_id = j;
             }
@@ -225,6 +224,7 @@ void proc_lvl5(void)
             }
 
             CCC_Minute *target = &minutes[lowest_id];
+            target->slots_left--;
                 
             // This minute has enough resources left
             if (task->power <= target->power_left)
