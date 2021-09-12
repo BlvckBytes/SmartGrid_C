@@ -1,10 +1,12 @@
 #include "include/stdparse.h"
 
-static _Bool is_digit(int character) {
+static _Bool is_digit(int character)
+{
     return character >= 48 && character <= 57;
 }
 
-int stdp_int() {
+int stdp_int()
+{
     static char digit_buf[128];
     int digit_buf_index = 0;
 

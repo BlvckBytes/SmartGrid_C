@@ -36,14 +36,16 @@ void proc_lvl2()
     printf("%d\n", num_tasks);
 
     // Loop tasks
-    for (int i = 0; i < num_tasks; i++) {
+    for (int i = 0; i < num_tasks; i++)
+    {
         // Load task
         CCC_Task task = { stdp_int(), stdp_int() };
         int curr_price = -1;
         int curr_begin = -1;
 
         // Top offset loop
-        for (int j = 0; j <= num_slots - task.dur; j++) {
+        for (int j = 0; j <= num_slots - task.dur; j++)
+        {
 
             // Task length accumulator
             int acc = 0;
@@ -51,7 +53,8 @@ void proc_lvl2()
                 acc += slot_prices[k];
 
             // Save next best result
-            if (curr_price == -1 || acc < curr_price) {
+            if (curr_price == -1 || acc < curr_price)
+            {
                 curr_price = acc;
                 curr_begin = j;
             }
