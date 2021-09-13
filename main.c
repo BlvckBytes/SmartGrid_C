@@ -11,12 +11,12 @@
 // Find cheapest slot id
 void proc_lvl1(void)
 {
-    int num_tasks = stdp_num();
+    int num_tasks = stdp_long();
     int smallest_slot_cost = -1;
     int smallest_slot_id = 0;
     for (int i = 0; i < num_tasks; i++)
     {
-        int curr_cost = stdp_num();
+        int curr_cost = stdp_long();
         if (smallest_slot_cost == -1 || curr_cost < smallest_slot_cost)
         {
             smallest_slot_cost = curr_cost;
@@ -30,20 +30,20 @@ void proc_lvl1(void)
 void proc_lvl2(void)
 {
     // Load slots
-    int num_slots = stdp_num();
+    int num_slots = stdp_long();
     int slot_prices[num_slots];
     for (int i = 0; i < num_slots; i++)
-        slot_prices[i] = stdp_num();
+        slot_prices[i] = stdp_long();
 
     // Get and print amount of tasks
-    int num_tasks = stdp_num();
+    int num_tasks = stdp_long();
     printf("%d\n", num_tasks);
 
     // Loop tasks
     for (int i = 0; i < num_tasks; i++)
     {
         // Load task
-        CCC_Task task = { stdp_num(), stdp_num(), 0, 0 };
+        CCC_Task task = { stdp_long(), stdp_long(), 0, 0 };
 
         int best_begin = 0;
 
@@ -75,17 +75,17 @@ void proc_lvl2(void)
 void proc_lvl3(void)
 {
     // Parse minutes and their price
-    int num_minutes = stdp_num();
+    int num_minutes = stdp_long();
     int minutes[num_minutes];
     for (int i = 0; i < num_minutes; i++)
-        minutes[i] = stdp_num();
+        minutes[i] = stdp_long();
 
-    int num_tasks = stdp_num();
+    int num_tasks = stdp_long();
     printf("%d\n", num_tasks);
 
     for (int i = 0; i < num_tasks; i++)
     {
-        CCC_Task task = { stdp_num(), stdp_num(), stdp_num(), stdp_num() };
+        CCC_Task task = { stdp_long(), stdp_long(), stdp_long(), stdp_long() };
 
         int lowest_id = -1;
         for (int i = task.start_interval; i <= task.end_interval; i++)
@@ -107,20 +107,20 @@ int compare_task_span (const void *a, const void *b) {
 // Find cheapest minutes to draw power from in interval, where each minute has limited resources
 void proc_lvl4(void)
 {
-    int max_power = stdp_num(); // max/minute
-    long max_bill = stdp_num(); //max bill
+    int max_power = stdp_long(); // max/minute
+    long max_bill = stdp_long(); //max bill
 
     // Parse minutes
-    int num_minutes = stdp_num();
+    int num_minutes = stdp_long();
     CCC_Minute minutes[num_minutes];
     for (int i = 0; i < num_minutes; i++)
-        minutes[i] = (CCC_Minute) { stdp_num(), 0, 0 };
+        minutes[i] = (CCC_Minute) { stdp_long(), 0, 0 };
 
     // Parse tasks
-    int num_tasks = stdp_num();
+    int num_tasks = stdp_long();
     CCC_Task tasks[num_tasks];
     for (int i = 0; i < num_tasks; i++)
-        tasks[i] = (CCC_Task) { stdp_num(), stdp_num(), stdp_num(), stdp_num() };
+        tasks[i] = (CCC_Task) { stdp_long(), stdp_long(), stdp_long(), stdp_long() };
     printf("%d\n", num_tasks);
 
     // Sort to lowest span first
@@ -182,21 +182,21 @@ void proc_lvl4(void)
 // Minutes have max. slots now
 void proc_lvl5(void)
 {
-    int max_power = stdp_num(); // max/minute
-    long max_bill = stdp_num(); //max bill
-    int max_concurrent = stdp_num(); // max tasks at a time
+    int max_power = stdp_long(); // max/minute
+    long max_bill = stdp_long(); //max bill
+    int max_concurrent = stdp_long(); // max tasks at a time
 
     // Parse minutes
-    int num_minutes = stdp_num();
+    int num_minutes = stdp_long();
     CCC_Minute minutes[num_minutes];
     for (int i = 0; i < num_minutes; i++)
-        minutes[i] = (CCC_Minute) { stdp_num(), 0, 0 };
+        minutes[i] = (CCC_Minute) { stdp_long(), 0, 0 };
 
     // Parse tasks
-    int num_tasks = stdp_num();
+    int num_tasks = stdp_long();
     CCC_Task tasks[num_tasks];
     for (int i = 0; i < num_tasks; i++)
-        tasks[i] = (CCC_Task) { stdp_num(), stdp_num(), stdp_num(), stdp_num() };
+        tasks[i] = (CCC_Task) { stdp_long(), stdp_long(), stdp_long(), stdp_long() };
     printf("%d\n", num_tasks);
 
     // Sort to lowest span first
@@ -255,21 +255,21 @@ double calc_min_price(CCC_Minute *min, double max_power)
 // Price per minute depends on active users of that minute
 void proc_lvl6(void)
 {
-    int max_power = stdp_num(); // max/minute
-    long max_bill = stdp_num(); //max bill
-    int max_concurrent = stdp_num(); // max tasks at a time
+    int max_power = stdp_long(); // max/minute
+    long max_bill = stdp_long(); //max bill
+    int max_concurrent = stdp_long(); // max tasks at a time
 
     // Parse minutes
-    int num_minutes = stdp_num();
+    int num_minutes = stdp_long();
     CCC_Minute minutes[num_minutes];
     for (int i = 0; i < num_minutes; i++)
-        minutes[i] = (CCC_Minute) { stdp_num(), 0, 0 };
+        minutes[i] = (CCC_Minute) { stdp_long(), 0, 0 };
 
     // Parse tasks
-    int num_tasks = stdp_num();
+    int num_tasks = stdp_long();
     CCC_Task tasks[num_tasks];
     for (int i = 0; i < num_tasks; i++)
-        tasks[i] = (CCC_Task) { stdp_num(), stdp_num(), stdp_num(), stdp_num() };
+        tasks[i] = (CCC_Task) { stdp_long(), stdp_long(), stdp_long(), stdp_long() };
     printf("%d\n", num_tasks);
 
     // Sort to lowest span first
@@ -328,25 +328,25 @@ void proc_lvl6(void)
 // Now, also manage households
 void proc_lvl7(void)
 {
-    int max_power = stdp_num(); // max/minute
-    long max_bill = stdp_num(); //max bill
-    int max_concurrent = stdp_num(); // max tasks at a time
+    int max_power = stdp_long(); // max/minute
+    long max_bill = stdp_long(); //max bill
+    int max_concurrent = stdp_long(); // max tasks at a time
 
     // Parse minutes
-    int num_minutes = stdp_num();
+    int num_minutes = stdp_long();
     CCC_Minute minutes[num_minutes];
     for (int i = 0; i < num_minutes; i++)
-        minutes[i] = (CCC_Minute) { stdp_num(), 0, 0 };
+        minutes[i] = (CCC_Minute) { stdp_long(), 0, 0 };
 
-    int num_households = stdp_num();
+    int num_households = stdp_long();
     printf("%d\n", num_households);
     
     for (int i = 0; i < num_households; i++)
     {
-        int num_tasks = stdp_num();
+        int num_tasks = stdp_long();
         CCC_Task household_tasks[num_tasks];
         for (int j = 0; j < num_tasks; j++)
-            household_tasks[j] = (CCC_Task) { stdp_num(), stdp_num(), stdp_num(), stdp_num() };
+            household_tasks[j] = (CCC_Task) { stdp_long(), stdp_long(), stdp_long(), stdp_long() };
         
         int power_left_minute[num_minutes];
         int slots_left_minute[num_minutes];
